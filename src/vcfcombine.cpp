@@ -142,6 +142,11 @@ int main(int argc, char** argv) {
                 if (column_headers_line.size() > 0) // if there are header columns then add them
                 {
                     vector<string> header_columns = split(column_headers_line, "\t");
+										for (int i = 9; i < header_columns.size(); i++) {
+											std::string filewext = inputFilename.substr(inputFilename.find_last_of("/") + 1);
+											std::string name = filewext.substr(0, filewext.find_first_of("\."));
+											header_columns[i] = name + "_" + header_columns[i];
+										}
                     for (vector<string>::const_iterator column_iter = header_columns.begin(); column_iter != header_columns.end(); ++column_iter)
                     {
                         vcf_header.addHeaderColumn(*column_iter);
@@ -159,8 +164,8 @@ int main(int argc, char** argv) {
 
     // now that we've accumulated the sample information we can generate the combined header
     VariantCallFile outputCallFile;
-//    string header = firstVCF->headerWithSampleNames(sampleNames);
-    string header = vcf_header.getHeaderString();
+		//string header = firstVCF->headerWithSampleNames(sampleNames);
+		string header = vcf_header.getHeaderString();
 
     outputCallFile.openForOutput(header);
 

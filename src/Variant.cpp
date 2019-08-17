@@ -1476,76 +1476,83 @@ bool VariantCallFile::parseHeader(string& hs) {
 
     vector<string> headerLines = split(header, "\n");
     for (vector<string>::iterator h = headerLines.begin(); h != headerLines.end(); ++h) {
-        string headerLine = *h;
-        if (headerLine.substr(0,2) == "##") {
-            // meta-information headerLines
-            // TODO parse into map from info/format key to type
-            // ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
-            // ##FORMAT=<ID=CB,Number=1,Type=String,Description="Called by S(Sanger), M(UMich), B(BI)">
-            size_t found = headerLine.find_first_of("=");
-            string entryType = headerLine.substr(2, found - 2);
-            // handle reference here, no "<" and ">" given
-                //} else if (entryType == "reference") {
-            size_t dataStart = headerLine.find_first_of("<");
-            size_t dataEnd = headerLine.find_first_of(">");
-            if (dataStart != string::npos && dataEnd != string::npos) {
-                string entryData = headerLine.substr(dataStart + 1, dataEnd - dataStart - 1);
-                // XXX bad; this will break if anyone ever moves the order
-                // of the fields around to include a "long form" string
-                // including either a = or , in the first or second field
-                if (entryType == "INFO" || entryType == "FORMAT") {
-                    vector<string> fields = split(entryData, "=,");
-                    if (fields[0] != "ID") {
-                        cerr << "header parse error at:" << endl
-                             << "fields[0] != \"ID\"" << endl
-                             << headerLine << endl;
-                        exit(1);
-                    }
-                    string id = fields[1];
-                    if (fields[2] != "Number") {
-                        cerr << "header parse error at:" << endl
-                             << "fields[2] != \"Number\"" << endl
-                             << headerLine << endl;
-                        exit(1);
-                    }
-                    int number;
-                    string numberstr = fields[3].c_str();
-                    // XXX TODO VCF has variable numbers of fields...
-                    if (numberstr == "A") {
-                        number = ALLELE_NUMBER;
-                    } else if (numberstr == "G") {
-                        number = GENOTYPE_NUMBER;
-                    } else if (numberstr == ".") {
-                        number = 1;
-                    } else {
-                        convert(numberstr, number);
-                    }
-                    if (fields[4] != "Type") {
-                        cerr << "header parse error at:" << endl
-                             << "fields[4] != \"Type\"" << endl
-                             << headerLine << endl;
-                        exit(1);
-                    }
-                    VariantFieldType type = typeStrToVariantFieldType(fields[5]);
-                    if (entryType == "INFO") {
-                        infoCounts[id] = number;
-                        infoTypes[id] = type;
-                        //cerr << id << " == " << type << endl;
-                    } else if (entryType == "FORMAT") {
-                        //cout << "found format field " << id << " with type " << type << endl;
-                        formatCounts[id] = number;
-                        formatTypes[id] = type;
-                    }
-                }
-            }
-        } else if (headerLine.substr(0,1) == "#") {
-            // field name headerLine
-            vector<string> fields = split(headerLine, '\t');
-            if (fields.size() > 8) {
-                sampleNames.resize(fields.size() - 9);
-                copy(fields.begin() + 9, fields.end(), sampleNames.begin());
-            }
-        }
+			string headerLine = *h;
+			if (headerLine.substr(0,2) == "##") {
+				// meta-information headerLines
+				// TODO parse into map from info/format key to type
+				// ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+				// ##FORMAT=<ID=CB,Number=1,Type=String,Description="Called by S(Sanger), M(UMich), B(BI)">
+				size_t found = headerLine.find_first_of("=");
+				string entryType = headerLine.substr(2, found - 2);
+				// handle reference here, no "<" and ">" given
+				//} else if (entryType == "reference") {
+				size_t dataStart = headerLine.find_first_of("<");
+				size_t dataEnd = headerLine.find_first_of(">");
+				if (dataStart != string::npos && dataEnd != string::npos) {
+					string entryData = headerLine.substr(dataStart + 1, dataEnd - dataStart - 1);
+					// XXX bad; this will break if anyone ever moves the order
+					// of the fields around to include a "long form" string
+					// including either a = or , in the first or second field
+					if (entryType == "INFO" || entryType == "FORMAT") {
+						vector<string> fields = split(entryData, "=,");
+						if (fields[0] != "ID") {
+							cerr << "header parse error at:" << endl
+								<< "fields[0] != \"ID\"" << endl
+								<< headerLine << endl;
+							exit(1);
+						}
+						string id = fields[1];
+						if (fields[2] != "Number") {
+							cerr << "header parse error at:" << endl
+								<< "fields[2] != \"Number\"" << endl
+								<< headerLine << endl;
+							exit(1);
+						}
+						int number;
+						string numberstr = fields[3].c_str();
+						// XXX TODO VCF has variable numbers of fields...
+						if (numberstr == "A") {
+							number = ALLELE_NUMBER;
+						} else if (numberstr == "G") {
+							number = GENOTYPE_NUMBER;
+						} else if (numberstr == ".") {
+							number = 1;
+						} else {
+							convert(numberstr, number);
+						}
+						if (fields[4] != "Type") {
+							cerr << "header parse error at:" << endl
+								<< "fields[4] != \"Type\"" << endl
+								<< headerLine << endl;
+							exit(1);
+						}
+						VariantFieldType type = typeStrToVariantFieldType(fields[5]);
+						if (entryType == "INFO") {
+							infoCounts[id] = number;
+							infoTypes[id] = type;
+							//cerr << id << " == " << type << endl;
+						} else if (entryType == "FORMAT") {
+							//cout << "found format field " << id << " with type " << type << endl;
+							formatCounts[id] = number;
+							formatTypes[id] = type;
+						}
+					}
+				}
+		} else if (headerLine.substr(0,1) == "#") {
+			// field name headerLine
+			vector<string> fields = split(headerLine, '\t');
+			if (fields.size() > 8) {
+				sampleNames.resize(fields.size() - 9);
+				copy(fields.begin() + 9, fields.end(), sampleNames.begin());
+				if (_filename.length() > 0) {
+					for (int i = 0; i < sampleNames.size(); i++) {
+						std::string filewext = _filename.substr(_filename.find_last_of("/") + 1);
+						std::string name = filewext.substr(0, filewext.find_first_of("\."));
+						sampleNames[i] = name + "_" + sampleNames[i];
+					}
+				}
+			}
+		}
     }
 
     return true;

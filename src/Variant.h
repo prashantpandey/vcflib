@@ -72,6 +72,7 @@ public:
     string source;
     string reference;
     string phasing;
+		string _filename;
     map<string, VariantFieldType> infoTypes;
     map<string, int> infoCounts;
     map<string, VariantFieldType> formatTypes;
@@ -98,6 +99,7 @@ public:
     }
 
     bool openFile(string& filename) {
+				_filename = filename;
         file = &_file;
         _file.open(filename.c_str(), ifstream::in);
         parsedHeader = parseHeader();
@@ -105,6 +107,7 @@ public:
     }
 
     bool openTabix(string& filename) {
+				_filename = filename;
         usingTabix = true;
         tabixFile = new Tabix(filename);
         parsedHeader = parseHeader();
